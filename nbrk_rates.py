@@ -57,6 +57,10 @@ try:
         else:
             logging.error(f"❌ Ошибка Telegram API: {send_resp.status_code} - {send_resp.text}")
 
+        print(f"Статус ответа Telegram: {send_resp.status_code}")
+        print("Ответ:", send_resp.text)
+
+
 except Exception as e:
     logging.error(f"‼️ Ошибка: {e}")
     print("‼️ Ошибка в nbrk_rates.py:", e)
