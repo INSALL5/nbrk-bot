@@ -5,9 +5,11 @@ from dotenv import load_dotenv
 import os
 import logging
 
+# Удаление log.txt, если он слишком большой
 if os.path.exists("log.txt") and os.path.getsize("log.txt") > 1_000_000:
     os.remove("log.txt")
 
+# Настройка логов
 logging.basicConfig(
     filename="log.txt",
     level=logging.INFO,
@@ -18,22 +20,29 @@ load_dotenv()
 TOKEN = os.getenv("TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
-today = datetime.today().strftime("%d.%m.%Y")
-url = f"https://nationalbank.kz/rss/get_rates.cfm?fdate={today}"
+# Уникальное имя файла по дате и времени
+now = datetime.now()
+timestamp = now.strftime("%d-%m-%Y_%H-%M")
+file_name = f"курсы_валют_НБРК_{timestamp}.xlsx"
+
+url = f"https://nationalbank.kz/rss/get_rates.cfm?fdate={now.strftime('%d.%m.%Y')}"
 
 try:
     response = requests.get(url)
     response.raise_for_status()
     df = pd.read_xml(response.content)
 
-    file_name = f"курсы_валют_НБРК_{today.replace('.', '-')}.xlsx"
+    # Удалим старый файл если вдруг совпало
+    if os.path.exists(file_name):
+        os.remove(file_name)
+
     df.to_excel(file_name, index=False)
 
-    logging.info(f"Файл {file_name} успешно сохранён.")
-    print(f"Файл сохранён: {file_name}")
+    logging.info(f"✅ Файл {file_name} сохранён.")
+    print(f"✅ Файл {file_name} сохранён.")
 
-    # Отправка текстового уведомления
-    msg = f"📥 Курсы валют на {today} загружены. Отправка файла..."
+    # Уведомление в Telegram
+    msg = f"📥 Курсы валют на {now.strftime('%d.%m.%Y %H:%M')} загружены. Отправка файла..."
     send_msg = requests.post(
         f"https://api.telegram.org/bot{TOKEN}/sendMessage",
         data={"chat_id": CHAT_ID, "text": msg}
@@ -53,5 +62,5 @@ try:
     logging.info(f"sendDocument: {send_doc.status_code} - {send_doc.text}")
 
 except Exception as e:
-    print("‼️ Ошибка в nbrk_rates.py:", e)
     logging.error(f"‼️ Ошибка: {e}")
+    print("‼️ Ошибка в nbrk_rates.py:", e)
