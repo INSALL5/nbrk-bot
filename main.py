@@ -1,15 +1,19 @@
-from flask import Flask, request, Response
+from flask import Flask, request, Response, jsonify
 import subprocess
 import threading
 import traceback
 import os
+from datetime import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
 
 app = Flask(__name__)
 is_running = False
-SECRET_KEY = os.getenv("TRIGGER_KEY")  # 🔐 берём из переменной окружения
+SECRET_KEY = os.getenv("TRIGGER_KEY")
+
+if not SECRET_KEY:
+    print("⚠️ TRIGGER_KEY не задан в переменных окружения")
 
 def run_script():
     global is_running
@@ -30,24 +34,21 @@ def run_script():
 
 @app.route("/")
 def root():
-    return "OK"  # для UptimeRobot
+    return "OK"
 
 @app.route("/trigger")
 def trigger():
     key = request.args.get("key")
     if key != SECRET_KEY:
         return Response("🔒 Доступ запрещён", status=403)
-    
+
     threading.Thread(target=run_script).start()
     return "🟢 Скрипт запущен"
 
-from flask import jsonify
-from datetime import datetime
-
 @app.route("/status")
 def status():
+    print("📡 Вызов /status")
     try:
-        # Получаем время последней модификации log.txt
         if os.path.exists("log.txt"):
             modified = datetime.fromtimestamp(os.path.getmtime("log.txt"))
             with open("log.txt", "r", encoding="utf-8") as f:
