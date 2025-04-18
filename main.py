@@ -40,3 +40,31 @@ def trigger():
     
     threading.Thread(target=run_script).start()
     return "🟢 Скрипт запущен"
+
+from flask import jsonify
+from datetime import datetime
+
+@app.route("/status")
+def status():
+    try:
+        # Получаем время последней модификации log.txt
+        if os.path.exists("log.txt"):
+            modified = datetime.fromtimestamp(os.path.getmtime("log.txt"))
+            with open("log.txt", "r", encoding="utf-8") as f:
+                lines = f.readlines()
+                last_line = lines[-1] if lines else "Лог пуст"
+        else:
+            modified = None
+            last_line = "Файл log.txt не найден"
+
+        return jsonify({
+            "status": "🟢 OK",
+            "last_updated": modified.strftime("%Y-%m-%d %H:%M:%S") if modified else "Нет данных",
+            "last_log": last_line.strip()
+        })
+
+    except Exception as e:
+        return jsonify({
+            "status": "🔴 ERROR",
+            "error": str(e)
+        }), 500
