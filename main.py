@@ -9,16 +9,16 @@ is_running = False  # защита от двойного запуска
 def run_script():
     global is_running
     if is_running:
-        print("⚠️ Запуск уже идёт — пропускаем")
+        print("Запуск уже идёт — пропускаем")
         return
 
     is_running = True
     try:
-        print("▶️ Запуск скрипта nbrk_rates.py")
+        print("Запуск скрипта nbrk_rates.py")
         subprocess.run(["python3", "nbrk_rates.py"])
-        print("✅ Скрипт завершён")
+        print("Скрипт завершён")
     except Exception as e:
-        print("‼️ Ошибка при запуске скрипта:", e)
+        print("Ошибка при запуске скрипта:", e)
         traceback.print_exc()
     finally:
         is_running = False
